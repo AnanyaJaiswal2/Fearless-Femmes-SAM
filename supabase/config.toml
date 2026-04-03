@@ -1,0 +1,7 @@
+project_id = "bffsdpzxpwrjmembqrrw"
+
+[functions.career-roadmap]
+verify_jwt = false
+
+[functions.career-guide]
+verify_jwt = false
