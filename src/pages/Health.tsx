@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
 import Layout from "@/components/Layout";
 import { fadeUp } from "@/lib/animations";
 import MenstrualTracker from "@/components/health/MenstrualTracker";
@@ -15,28 +14,48 @@ const Health = () => {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="section-padding gradient-hero">
-        <div className="container-narrow">
+      {/* ================= HERO (SIZE SAME) ================= */}
+      <section
+        className="section-padding relative bg-cover bg-right"
+        style={{
+          backgroundImage: "url('/images/health-banner.png')", // ✅ FIXED PATH
+        }}
+      >
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-transparent"></div>
+
+        <div className="container-narrow relative z-10">
           <motion.div initial="hidden" animate="visible" className="max-w-2xl">
-            <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-bold mb-4">
-              Your Health, <span className="text-gradient">Your Power</span>
+            
+            <motion.h1
+              variants={fadeUp}
+              custom={0}
+              className="text-4xl md:text-5xl font-bold mb-4"
+            >
+              Your Health,{" "}
+              <span className="text-gradient">Your Power</span>
             </motion.h1>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-lg">
+
+            <motion.p
+              variants={fadeUp}
+              custom={1}
+              className="text-lg text-muted-foreground max-w-lg"
+            >
               Track your wellness, access health resources, and take charge of your physical and mental health.
             </motion.p>
+
           </motion.div>
         </div>
       </section>
 
-      {/* Menstrual Tracker */}
+      {/* ================= MENSTRUAL TRACKER ================= */}
       <section className="section-padding">
         <div className="container-narrow">
           <MenstrualTracker />
         </div>
       </section>
 
-      {/* Mood Tracker + Insights */}
+      {/* ================= MOOD TRACKER + INSIGHTS ================= */}
       <section className="section-padding bg-muted/30">
         <div className="container-narrow">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -46,21 +65,21 @@ const Health = () => {
         </div>
       </section>
 
-      {/* Health Resources */}
+      {/* ================= HEALTH RESOURCES ================= */}
       <section className="section-padding">
         <div className="container-narrow">
           <HealthResources />
         </div>
       </section>
 
-      {/* Myth vs Fact */}
+      {/* ================= MYTH VS FACT ================= */}
       <section className="section-padding bg-muted/30">
         <div className="container-narrow">
           <MythFacts />
         </div>
       </section>
 
-      {/* Helplines */}
+      {/* ================= HELPLINES ================= */}
       <section className="section-padding">
         <div className="container-narrow">
           <HealthHelplines />
