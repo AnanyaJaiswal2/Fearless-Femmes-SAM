@@ -45,7 +45,6 @@ const Health = () => {
           </div>
         </div>
       </section>
-
       {/* Health Resources */}
       <section className="section-padding">
         <div className="container-narrow">
