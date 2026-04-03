@@ -14,14 +14,13 @@ const Health = () => {
 
   return (
     <Layout>
-      {/* ================= HERO (SIZE SAME) ================= */}
+      {/* ================= HERO ================= */}
       <section
         className="section-padding relative bg-cover bg-right"
         style={{
-          backgroundImage: "url('/images/health-banner.png')", // ✅ FIXED PATH
+          backgroundImage: "url('/images/health-banner.png')",
         }}
       >
-        {/* Overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-transparent"></div>
 
         <div className="container-narrow relative z-10">
