@@ -58,24 +58,54 @@ const Dashboard = () => {
     if (data) setContacts(data);
   };
 
-  const fetchHealthData = async () => {
-    if (!user) return;
-    // Last mood
-    const { data: moodData } = await supabase.from("mood_logs").select("mood").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(1);
-    if (moodData && moodData.length > 0) setLastMood(moodData[0].mood);
-    // Next period prediction
-    const { data: periodData } = await supabase.from("period_logs").select("start_date, cycle_length").eq("user_id", user.id).order("start_date", { ascending: false }).limit(5);
-    if (periodData && periodData.length >= 2) {
-      const cycleLengths = periodData.filter((p) => p.cycle_length && p.cycle_length > 0).map((p) => p.cycle_length!);
-      if (cycleLengths.length > 0) {
-        const avg = Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length);
-        const lastStart = new Date(periodData[0].start_date);
-        const next = new Date(lastStart);
-        next.setDate(next.getDate() + avg);
-        setNextPeriod(next.toLocaleDateString("en-IN", { day: "numeric", month: "long" }));
-      }
-    }
-  };
+ const fetchHealthData = async () => {
+  if (!user) return;
+
+  // Last mood
+  const { data: moodData } = await supabase
+    .from("mood_logs")
+    .select("mood")
+    .eq("user_id", user.id)
+    .order("logged_at", { ascending: false })
+    .limit(1);
+
+  if (moodData && moodData.length > 0) {
+    setLastMood(moodData[0].mood);
+  }
+
+  // Period prediction (FIXED 🔥)
+  const { data: periodData } = await supabase
+    .from("period_logs")
+    .select("start_date, cycle_length")
+    .eq("user_id", user.id)
+    .order("start_date", { ascending: false });
+
+  if (periodData && periodData.length > 0) {
+    const lastStart = new Date(periodData[0].start_date);
+
+    // Get valid cycle lengths
+    const cycleLengths = periodData
+      .filter((p) => p.cycle_length && p.cycle_length > 0)
+      .map((p) => p.cycle_length!);
+
+    // 👉 Default = 28 days (IMPORTANT FIX)
+    const avgCycle =
+      cycleLengths.length > 0
+        ? Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length)
+        : 28;
+
+    const next = new Date(lastStart);
+    next.setDate(next.getDate() + avgCycle);
+
+    setNextPeriod(
+      next.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    );
+  }
+};
 
   const saveName = async () => {
     if (!user || !newName.trim()) return;
