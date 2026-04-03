@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/fflogo.jpeg";
 const navLinks = [
   { label: "Home", path: "/" },
@@ -15,6 +17,7 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+  const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
@@ -60,7 +63,16 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
-
+        <button
+  onClick={toggleTheme}
+  className="ml-2 p-2 rounded-xl hover:bg-muted transition"
+>
+  {theme === "dark" ? (
+    <Sun className="h-5 w-5" />
+  ) : (
+    <Moon className="h-5 w-5" />
+  )}
+</button>
           {user ? (
             <div className="relative ml-3">
               <button
