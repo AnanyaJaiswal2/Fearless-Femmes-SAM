@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-
+import logo from "@/assets/fflogo.jpeg";
 const navLinks = [
   { label: "Home", path: "/" },
   { label: "Safety", path: "/safety" },
@@ -34,12 +34,16 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
       <div className="container-narrow flex items-center justify-between px-4 py-3 md:px-8">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="gradient-purple rounded-xl p-2 transition-transform group-hover:scale-105">
-            <Shield className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold text-gradient">Fearless Femmes</span>
-        </Link>
+      <Link to="/" className="flex items-center gap-2 group">
+  <img
+    src={logo}
+    alt="Logo"
+    className="h-10 w-auto object-contain"
+  />
+  <span className="text-xl font-display font-bold text-gradient">
+    Fearless Femmes
+  </span>
+</Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-1">
