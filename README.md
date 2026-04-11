@@ -58,22 +58,12 @@ It focuses on **preventive intelligence**, not just reactive alerts.
 
 ---
 
-## 🏗️ Architecture
-
-- **Frontend:** React + Tailwind  
-- **Backend:** Firebase + Cloud Functions  
-- **AI Layer:** Gemini API  
-- **Database:** Firestore  
-- **APIs:** Google Maps  
-
----
-
 ## 🛠️ Tech Stack
 
 - React.js  
 - JavaScript  
 - Tailwind CSS  
-- Firebase  
+- Supabase 
 - Gemini API  
 - Google Maps API  
 
