@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 
+
 const defaultEmergencyContacts = [
   { name: "Women Helpline", number: "181", desc: "24/7 Women helpline" },
   { name: "Police", number: "100", desc: "Emergency police" },
@@ -51,6 +52,8 @@ interface PersonalContact {
 }
 
 const Safety = () => {
+  const [simOpen, setSimOpen] = useState(false);
+
   const { user } = useAuth();
   const [sosActive, setSosActive] = useState(false);
   const [anonymous, setAnonymous] = useState(false);
@@ -463,7 +466,265 @@ const Safety = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Scenario Simulator */}
+<section className="section-padding bg-muted/30">
+  <div className="container-narrow max-w-2xl">
+
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="text-center mb-6"
+    >
+      <motion.h2 variants={fadeUp} custom={0} className="text-3xl font-bold mb-2">
+        🎮 Safety Scenario Simulator
+      </motion.h2>
+
+      <motion.p variants={fadeUp} custom={1} className="text-muted-foreground">
+        Practice real-life situations and learn the safest actions.
+      </motion.p>
+    </motion.div>
+
+    <motion.div
+      variants={fadeUp}
+      custom={2}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="glass-card rounded-2xl p-6"
+    >
+
+      <p className="text-sm text-muted-foreground mb-3">
+        Try scenarios like:
+      </p>
+
+      <div className="flex gap-2 flex-wrap text-xs mb-4">
+        <span className="bg-white px-2 py-1 rounded">Late night cab</span>
+        <span className="bg-white px-2 py-1 rounded">Coming from office alone</span>
+        <span className="bg-white px-2 py-1 rounded">Walking alone</span>
+      </div>
+
+      <Button
+        onClick={() => setSimOpen(true)}
+        className="rounded-xl bg-pink-500 text-white hover:bg-pink-600"
+      >
+        Try Simulator →
+      </Button>
+
+    </motion.div>
+
+  </div>
+</section>
+
+
+{simOpen && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <SimulatorModal setOpen={setSimOpen} />
+  </div>
+)}
     </Layout>
+  );
+};
+
+const SimulatorModal = ({ setOpen }: any) => {
+  const [data, setData] = useState<any>(null);
+  const [score, setScore] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // 🔥 NEW STATES
+  const [level, setLevel] = useState("easy");
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [gameOver, setGameOver] = useState(false);
+
+  // 🎯 TIMER
+  useEffect(() => {
+    if (!data || answered) return;
+
+    if (timeLeft === 0) {
+      setAnswered(true);
+      setFeedback("⏱ Time up!");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [timeLeft, data, answered]);
+
+  const getScenario = async () => {
+    try {
+      setLoading(true);
+      setAnswered(false);
+      setFeedback("");
+      setTimeLeft(10);
+
+      const res = await fetch("http://localhost:5000/scenario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input,
+          level,
+          random: Date.now(),
+        }),
+      });
+
+      const json = await res.json();
+      setData(json);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClick = (opt: string) => {
+    if (!data || answered) return;
+
+    setAnswered(true);
+    setTotal((prev) => prev + 1);
+
+    if (opt === data.correct) {
+      setScore((prev) => prev + 1);
+      setFeedback("✅ Correct");
+    } else {
+      setFeedback("❌ " + data.feedback);
+    }
+
+    setTimeout(() => {
+      if (total >= 4) {
+        setGameOver(true);
+      } else {
+        getScenario();
+      }
+    }, 1200);
+  };
+
+  const resetGame = () => {
+    setScore(0);
+    setTotal(0);
+    setGameOver(false);
+    setData(null);
+  };
+
+  return (
+    <div className="w-[450px] p-6 rounded-2xl shadow-xl
+      bg-gradient-to-br from-white to-purple-100
+      dark:from-zinc-900 dark:to-zinc-800">
+
+      <h2 className="text-xl font-bold text-purple-700 dark:text-purple-400">
+        🎮 Safety Simulator
+      </h2>
+
+      {/* LEVEL SELECT */}
+      <div className="mt-3 flex gap-2">
+        {["easy", "medium", "hard"].map((l) => (
+          <button
+            key={l}
+            onClick={() => setLevel(l)}
+            className={`px-3 py-1 rounded-full text-xs ${
+              level === l
+                ? "bg-purple-600 text-white"
+                : "bg-gray-200 dark:bg-zinc-700"
+            }`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* SCORE */}
+      <p className="text-sm mt-2">
+        Score: <b className="text-purple-600">{score}</b> / {total}
+      </p>
+
+      {/* PROGRESS BAR */}
+      <div className="w-full bg-gray-200 h-2 rounded mt-2">
+        <div
+          className="bg-purple-500 h-2 rounded"
+          style={{ width: `${(total / 5) * 100}%` }}
+        />
+      </div>
+
+      {/* TIMER */}
+      {data && !answered && (
+        <p className="text-xs text-red-500 mt-1">
+          ⏱ {timeLeft}s
+        </p>
+      )}
+
+      {/* INPUT */}
+      <input
+        placeholder="Optional scenario..."
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        className="w-full mt-3 px-4 py-2 rounded-xl border dark:bg-zinc-800"
+      />
+
+      {/* START BUTTON */}
+      <button
+        onClick={getScenario}
+        className="w-full mt-4 py-2 rounded-xl text-white
+        bg-gradient-to-r from-pink-500 to-purple-600"
+      >
+        {loading ? "Loading..." : "Start Simulation"}
+      </button>
+
+      {/* GAME OVER */}
+      {gameOver && (
+        <div className="mt-4 text-center">
+          <h3 className="text-lg font-bold">🏁 Game Over</h3>
+          <p>Your Score: {score} / {total}</p>
+          <button
+            onClick={resetGame}
+            className="mt-2 px-4 py-2 bg-purple-500 text-white rounded"
+          >
+            Restart
+          </button>
+        </div>
+      )}
+
+      {/* SCENARIO */}
+      {data && !gameOver && (
+        <>
+          <div className="mt-4 p-3 bg-white dark:bg-zinc-800 rounded-xl">
+            {data.situation}
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {data.options.map((opt: string, i: number) => (
+              <button
+                key={i}
+                onClick={() => handleClick(opt)}
+                disabled={answered}
+                className="w-full p-3 rounded-xl bg-purple-100 dark:bg-zinc-700 hover:bg-purple-200"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          {feedback && (
+            <div className="mt-3 text-sm">{feedback}</div>
+          )}
+        </>
+      )}
+
+      <button
+        onClick={() => setOpen(false)}
+        className="mt-4 text-sm text-gray-500"
+      >
+        Close
+      </button>
+    </div>
   );
 };
 
