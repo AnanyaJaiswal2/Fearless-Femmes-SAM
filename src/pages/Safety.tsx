@@ -20,6 +20,15 @@ const defaultEmergencyContacts = [
   { name: "NCW", number: "7827-170-170", desc: "National Commission for Women" },
 ];
 
+// const [callerType, setCallerType] = useState("Father");
+// const [tone, setTone] = useState("Urgent");
+// const [customMessage, setCustomMessage] = useState("");
+// const [generatedScript, setGeneratedScript] = useState("");
+// const [showCall, setShowCall] = useState(false);
+
+
+
+
 const laws = [
   { title: "Domestic Violence Act, 2005", desc: "Protection against domestic violence including physical, emotional, and economic abuse." },
   { title: "Sexual Harassment at Workplace Act, 2013", desc: "Protection against sexual harassment at workplace with complaint mechanisms." },
@@ -51,11 +60,18 @@ interface PersonalContact {
   relationship: string | null;
 }
 
+
+
 const Safety = () => {
   const [simOpen, setSimOpen] = useState(false);
 
   const { user } = useAuth();
   const [sosActive, setSosActive] = useState(false);
+  const [callerType, setCallerType] = useState("Father");
+const [tone, setTone] = useState("Urgent");
+const [customMessage, setCustomMessage] = useState("");
+const [generatedScript, setGeneratedScript] = useState("");
+const [showCall, setShowCall] = useState(false);
   const [anonymous, setAnonymous] = useState(false);
   const [reportLocation, setReportLocation] = useState("");
   const [reportCategory, setReportCategory] = useState("");
@@ -81,6 +97,9 @@ const Safety = () => {
       .eq("user_id", user.id)
       .then(({ data }) => { if (data) setPersonalContacts(data); });
   }, [user]);
+  useEffect(() => {
+  window.speechSynthesis.getVoices();
+}, []);
 
   // Initialize heatmap
   useEffect(() => {
@@ -145,6 +164,99 @@ const Safety = () => {
     }
     setTimeout(() => setSosActive(false), 5000);
   };
+  const handleGenerateCall = async () => {
+  try {
+    const prompt = `
+Generate a realistic fake phone call script in Hinglish.
+
+Caller: ${callerType}
+Tone: ${tone}
+Situation: ${customMessage || "User feels unsafe and needs an excuse"}
+
+Make it sound natural and believable.
+Keep it under 4 lines.
+`;
+
+ const res = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCSVZz8sg3_B1-j3YvhOR_GC7J_YWC5Q3I`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    }),
+  }
+);
+
+const data = await res.json();
+ // ✅ Handle quota error gracefully
+    if (data.error?.code === 429) {
+      const fallbacks = {
+        Father: "Haan beta, main gate ke aas hun. Jaldi aa, police uncle bhi hain yahan.",
+        Friend: "Arre yaar kahan hai tu? Main neeche hun, 2 minute mein aa ja!",
+        Boss:   "Meeting start ho gayi hai, tum abhi tak nahi aayi? Immediately aao office.",
+      };
+      setGeneratedScript(fallbacks[callerType] || fallbacks["Father"]);
+      setTimeout(() => setShowCall(true), 4000);
+      return;
+    }
+
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text 
+      || "Haan beta, theek ho? Main aa raha hun.";
+    setGeneratedScript(text);
+    setTimeout(() => setShowCall(true), 4000);
+
+  } catch (err) {
+    toast({ title: "Error generating call", variant: "destructive" });
+  }
+};
+const speakText = (text: string) => {
+  const synth = window.speechSynthesis;
+
+  const speakNow = () => {
+    synth.cancel();
+    const voices = synth.getVoices();
+
+    // Priority order for most human-sounding voices
+    const preferredVoices = [
+      voices.find(v => v.name.includes("Google हिन्दी")),
+      voices.find(v => v.name.includes("Google UK English Female")),
+      voices.find(v => v.name.includes("Google UK English Male")),
+      voices.find(v => v.name.includes("Microsoft Heera")),
+      voices.find(v => v.name.includes("Microsoft Ravi")),
+      voices.find(v => v.lang === "en-IN"),
+      voices.find(v => v.lang === "hi-IN"),
+      voices.find(v => v.name.includes("Google")), // any Google voice
+    ].find(Boolean); // picks first non-undefined
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    if (preferredVoices) utterance.voice = preferredVoices;
+
+    // 🔥 These settings make it sound most human
+    utterance.rate = 0.88;    // slightly slower = more natural
+    utterance.pitch = 1.05;   // very slightly higher = warmer tone
+    utterance.volume = 1;
+
+    synth.speak(utterance);
+  };
+
+  if (synth.getVoices().length === 0) {
+    synth.onvoiceschanged = speakNow;
+  } else {
+    speakNow();
+  }
+};
 
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,7 +475,61 @@ const Safety = () => {
           </div>
         </div>
       </section>
+{/* Fake Call Generator */}
+<section className="section-padding">
+  <div className="container-narrow max-w-xl">
+    <motion.div
+      variants={fadeUp}
+      custom={2}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="glass-card rounded-2xl p-8"
+    >
+      <Phone className="h-8 w-8 text-primary mb-4" />
+      <h2 className="text-2xl font-bold mb-4">Fake Call Generator</h2>
 
+      <div className="flex flex-col gap-4">
+        
+        {/* Caller Type */}
+        <select
+          className="rounded-xl p-2 bg-background border"
+          value={callerType}
+          onChange={(e) => setCallerType(e.target.value)}
+        >
+          <option>Mother</option>
+          <option>Friend</option>
+          <option>Boss</option>
+        </select>
+
+        {/* Tone */}
+        <select
+          className="rounded-xl p-2 bg-background border"
+          value={tone}
+          onChange={(e) => setTone(e.target.value)}
+        >
+          <option>Urgent</option>
+          <option>Strict</option>
+          <option>Casual</option>
+        </select>
+
+        {/* Optional Message */}
+        <Textarea
+          placeholder="Optional custom situation..."
+          value={customMessage}
+          onChange={(e) => setCustomMessage(e.target.value)}
+        />
+
+        <Button
+          onClick={handleGenerateCall}
+          className="gradient-purple text-white rounded-xl"
+        >
+          Generate Fake Call
+        </Button>
+      </div>
+    </motion.div>
+  </div>
+</section>
       {/* Safety Heatmap */}
       <section className="section-padding bg-muted/30">
         <div className="container-narrow">
@@ -521,6 +687,36 @@ const Safety = () => {
 {simOpen && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
     <SimulatorModal setOpen={setSimOpen} />
+      {showCall && (
+  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div className="bg-background rounded-2xl p-8 text-center w-[300px]">
+      
+      <h3 className="text-lg font-bold mb-2">
+        {callerType} Calling...
+      </h3>
+
+      <p className="text-sm text-muted-foreground mb-6">
+        Incoming call
+      </p>
+
+      <div className="flex justify-center gap-4">
+        <Button
+          className="bg-green-600 text-white rounded-full px-4"
+          onClick={() => {
+  speakText(generatedScript);
+}}
+        >
+          Accept
+        </Button>
+
+        <Button
+          className="bg-red-600 text-white rounded-full px-4"
+          onClick={() => setShowCall(false)}
+        >
+          Reject
+        </Button>
+      </div>
+    </div>
   </div>
 )}
     </Layout>
